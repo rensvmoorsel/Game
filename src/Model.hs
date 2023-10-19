@@ -29,7 +29,7 @@ data GameState = GameState {
 initialState :: GameState
 initialState = let listofwalls = [MkLine (MkPosition 100 490) (MkPosition 150 490), MkLine (MkPosition 400 300) (MkPosition 400 100)]
                    listofcircles = [MkPosition 100 2, MkPosition 8 2]
-                   pacman = MkPacMan (MkPosition 100 200) Up Closed
+                   pacman = MkPacMan (MkPosition 100 200) Up Open
                    p = MkEnemy (makeColor 255 192 203 255) (MkPosition 49 252) Up
                    b = MkEnemy blue (MkPosition 643 45) Up
                    o = MkEnemy orange (MkPosition 64 32) Up
