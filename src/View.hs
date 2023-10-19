@@ -12,7 +12,7 @@ view gameState@(GameState (MkMaze _ _ pm pink blue orange red) _) = do
                                                             return $ Pictures [pacman, viewPure gameState]
 
 viewPure :: GameState -> Picture
-viewPure (GameState (MkMaze walls circles pacman pink blue orange red) _) = Pictures $ map drawWall walls ++ map drawCircle circles
+viewPure (GameState (MkMaze walls circles _ _ _ _ _) _) = Pictures $ map drawWall walls ++ map drawCircle circles
 
 drawWall :: Wall -> Picture
 drawWall (MkLine (MkPosition x1 y1) (MkPosition x2 y2))  = Color white $ Line [(x1, y1), (x2, y2)]
