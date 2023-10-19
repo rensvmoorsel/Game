@@ -6,7 +6,8 @@ import Graphics.Gloss
 import Model
 
 view :: GameState -> IO Picture
-view gameState@(GameState (MkMaze _ _ pm pink blue orange red) _) = do 
+view gameState@(GameState maze@(MkMaze {}) Paused) = view (GameState maze Running) --EN NOG EEN PAUZESCHERM EROVERHEEN
+view gameState@(GameState (MkMaze _ _ pm pink blue orange red) _) = do
                                                             pacman <- drawPacMan pm
                                                             return $ Pictures [pacman, viewPure gameState]
 
