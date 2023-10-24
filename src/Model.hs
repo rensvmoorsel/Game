@@ -20,6 +20,14 @@ data MouthStatus = Open | Closed
 data Enemy = MkEnemy EnemyColor Position Direction
 data EnemyColor = Red | Orange | Pink | Blue
 
+instance Show EnemyColor where
+  show Red = "Red"
+  show Orange = "Orange"
+  show Pink = "Pink"
+  show Blue = "Blue"
+
+
+
 data Position = MkPosition Float Float
 data Line = MkLine Position Position
 

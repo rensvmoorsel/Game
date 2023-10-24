@@ -68,15 +68,10 @@ drawEnemy e@(MkEnemy _ (MkPosition x y) _) = do
                                                             return $ Translate x y image
 
 enemyImageName :: Enemy -> String
-enemyImageName (MkEnemy col _ dir) = enemyColorName col ++ enemyDirectionName dir
+enemyImageName (MkEnemy col _ dir) = show col ++ enemyImageName' dir
     where 
-        enemyColorName :: EnemyColor -> String
-        enemyColorName Red = "Red"
-        enemyColorName Blue = "Blue"
-        enemyColorName Orange = "Orange"
-        enemyColorName Pink = "Pink"
-        enemyDirectionName :: Direction -> String
-        enemyDirectionName Model.Up = "Up.bmp"
-        enemyDirectionName Model.Left = "Left.bmp"
-        enemyDirectionName Model.Right = "Right.bmp"
-        enemyDirectionName Model.Down = "Down.bmp"
+        enemyImageName' :: Direction -> String
+        enemyImageName' Model.Up = "Up.bmp"
+        enemyImageName' Model.Left = "Left.bmp"
+        enemyImageName' Model.Right = "Right.bmp"
+        enemyImageName' Model.Down = "Down.bmp"
