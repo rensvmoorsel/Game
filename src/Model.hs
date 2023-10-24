@@ -3,7 +3,15 @@
 module Model where
 import Graphics.Gloss
 
-data Maze = MkMaze [Tile] PacMan Enemy Enemy Enemy Enemy
+data Maze = MkMaze {
+  grid :: [Tile],
+  pacman :: PacMan,
+  pinkEnemy :: Enemy,
+  blueEnemy :: Enemy,
+  orangeEnemy :: Enemy,
+  redEnemy :: Enemy
+ }
+
 type Width = Float
 type Height = Float
 
@@ -52,3 +60,12 @@ initialState = let grid = createGrid [Wall 1 1, Wall 4 2, Wall 14 20, Model.Circ
                    o = MkEnemy Orange (MkPosition 64 32) Up
                    r = MkEnemy Red (MkPosition 563 257) Up
                in GameState (MkMaze grid pacman p b o r) Running
+
+tiletoPath :: Tile -> Path
+tiletoPath (Wall x y) = let p1 = ((-30 + 30 * x) - 420, (15 - 30 * y) + 480)
+                            p2 = ((-30 + 30 * x) - 420, (-15 - 30 * y) + 480)
+                            p3 = (30 * x - 420, (-15 - 30 * y) + 480)
+                            p4 = (30 * x - 420, (15 - 30 * y) + 480)
+                        in 
+                            [p1, p2, p3, p4]
+tiletoPath (Model.Circle x y) = [((-15 + 30 * x) - 420, (-30) * y + 480)]
