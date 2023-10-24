@@ -4,43 +4,44 @@ module View where
 
 import Graphics.Gloss
 import Model
+import Data.Maybe (mapMaybe)
+import Text.Read (Lexeme(String))
 
 view :: GameState -> IO Picture
-view gameState@(GameState maze@(MkMaze {}) Paused) = view (GameState maze Running) --EN NOG EEN PAUZESCHERM EROVERHEEN
+view gameState@(GameState maze@(MkMaze {}) Ended) = do
+                                                        gameScreen <- view (GameState maze Running)
+                                                        pauseScreen <- loadBMP "src\\Images\\StartScreen.bmp"
+                                                        return $ Pictures [gameScreen, pauseScreen]
+view gameState@(GameState maze@(MkMaze {}) Paused) = do
+                                                        gameScreen <- view (GameState maze Running)
+                                                        pauseScreen <- loadBMP "src\\Images\\PauseScreen.bmp"
+                                                        return $ Pictures [gameScreen, pauseScreen]
 view gameState@(GameState (MkMaze _ pm pink blue orange red) _) = do
                                                             pacman <- drawPacMan pm
-                                                            return $ Pictures [pacman, viewPure gameState]
+                                                            p <- drawEnemy pink
+                                                            b <- drawEnemy blue
+                                                            o <- drawEnemy orange
+                                                            r <- drawEnemy red
+                                                            return $ Pictures [pacman, p, viewPure gameState]
 
 viewPure :: GameState -> Picture
-viewPure (GameState (MkMaze walls _ _ _ _ _) _) = Pictures $ map drawTile walls
+viewPure (GameState (MkMaze walls _ _ _ _ _) _) = Pictures $ mapMaybe drawTile walls
 
---drawWall :: Wall -> Picture
---drawWall (MkLine (MkPosition x1 y1) (MkPosition x2 y2))  = Color white $ Line [(x1, y1), (x2, y2)]
-
---drawCircle :: Circle -> Picture
---drawCircle (MkPosition x y) = Color white $ Translate x y $ ThickCircle 3 6
-
-drawTile :: Tile -> Picture
-drawTile (Empty row column) = undefined
-drawTile (Wall row column) = Color white $ polygon (tiletoPath (Wall row column))
-drawTile (Model.Circle row column) = Color yellow $ polygon (tiletoPath (Wall row column))
+drawTile :: Tile -> Maybe Picture
+drawTile (Empty row column) = Prelude.Nothing
+drawTile wall@(Wall row column) = Just $ Color white $ polygon (tiletoPath wall)
+drawTile circle@(Model.Circle row column) = let
+                                                coordinates = head (tiletoPath circle)
+                                            in
+                                                Just $ Color white $ uncurry Translate coordinates $ ThickCircle 3 6
 
 tiletoPath :: Tile -> Path
-tiletoPath (Empty x y) = let p1 = ((-30 + 30 * x) - 420, (15 - 30 * y) + 480)
-                             p2 = ((-30 + 30 * x) - 420, (-15 - 30 * y) + 480)
-                             p3 = ((0 + 30 * x) - 420, (15 - 30 * y) + 480)
-                             p4 = ((0 + 30 * x) - 420, (-15 - 30 * y) + 480)
-                         in [p1, p2, p3, p4]
 tiletoPath (Wall x y) = let p1 = ((-30 + 30 * x) - 420, (15 - 30 * y) + 480)
                             p2 = ((-30 + 30 * x) - 420, (-15 - 30 * y) + 480)
-                            p3 = ((0 + 30 * x) - 420, (15 - 30 * y) + 480)
-                            p4 = ((0 + 30 * x) - 420, (-15 - 30 * y) + 480)
+                            p3 = (30 * x - 420, (-15 - 30 * y) + 480)
+                            p4 = (30 * x - 420, (15 - 30 * y) + 480)
                          in [p1, p2, p3, p4]
-tiletoPath (Model.Circle x y) = let p1 = ((-30 + 30 * x) - 420, (15 - 30 * y) + 480)
-                                    p2 = ((-30 + 30 * x) - 420, (-15 - 30 * y) + 480)
-                                    p3 = ((0 + 30 * x) - 420, (15 - 30 * y) + 480)
-                                    p4 = ((0 + 30 * x) - 420, (-15 - 30 * y) + 480)
-                                in [p1, p2, p3, p4]
+tiletoPath (Model.Circle x y) = [((-15 + 30 * x) - 420, (-30) * y + 480)]
 
 
 
@@ -61,8 +62,21 @@ drawPacMan (MkPacMan (MkPosition x y) Model.Right Open) = do
                                                             pacManImage <- loadBMP "src\\Images\\PacmanOpenRight.bmp"
                                                             return $ Translate x y pacManImage
 
---drawEnemy :: Enemy -> Picture
---drawEnemy (MkEnemy color (MkPosition x y) Up) = Color color $ Translate x y $ 
---drawEnemy (MkEnemy color (MkPosition x y) Down) = Color color $ Translate x y $ 
---drawEnemy (MkEnemy color (MkPosition x y) Left) = Color color $ Translate x y $ 
---drawEnemy (MkEnemy color (MkPosition x y) Right) = Color color $ Translate x y $ 
+drawEnemy :: Enemy -> IO Picture
+drawEnemy e@(MkEnemy _ (MkPosition x y) _) = do
+                                                            image <- loadBMP $ "src\\Images\\" ++ enemyImageName e
+                                                            return $ Translate x y image
+
+enemyImageName :: Enemy -> String
+enemyImageName (MkEnemy col _ dir) = enemyColorName col ++ enemyDirectionName dir
+    where 
+        enemyColorName :: EnemyColor -> String
+        enemyColorName Red = "Red"
+        enemyColorName Blue = "Blue"
+        enemyColorName Orange = "Orange"
+        enemyColorName Pink = "Pink"
+        enemyDirectionName :: Direction -> String
+        enemyDirectionName Model.Up = "Up.bmp"
+        enemyDirectionName Model.Left = "Left.bmp"
+        enemyDirectionName Model.Right = "Right.bmp"
+        enemyDirectionName Model.Down = "Down.bmp"
