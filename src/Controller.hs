@@ -9,6 +9,7 @@ import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game as G
 import System.Random
 import Data.Char (isDigit, ord)
+import System.Directory
 
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState --IO WANT RANDOM GEDEELTE KOMT ERIN
@@ -20,7 +21,8 @@ step secs gstate | (status gstate == Failed || status gstate == Complete)
                  | status gstate == Complete = do --save level completed if not already done
                                                 levels <- unlockedLevels
                                                 let nextLevel = lastLevel gstate + 1 --find next level
-                                                if nextLevel `notElem` levels && isLevel nextLevel then --if level exists and not unlocked yet: unlock it
+                                                levelExists <- isLevel nextLevel
+                                                if nextLevel `notElem` levels && levelExists then --if level exists and not unlocked yet: unlock it
                                                     do
                                                         appendFile "src\\levels\\UnlockedLevels.txt" $ ' ':show nextLevel 
                                                         return $ updateObject gstate secs gstate
@@ -31,8 +33,8 @@ keyToInt :: Model.Key -> Int --convert a level key to the int of the level
 keyToInt L1 = 1
 keyToInt L2 = 2
 
-isLevel :: Int -> Bool --check if level exists
-isLevel level = level <= 2 && level > 0
+isLevel :: Int -> IO Bool --check if level exists
+isLevel level = doesFileExist $ "src\\levels\\" ++ show level ++ ".txt"
 
 -- | Handle user input
 input :: Event -> GameState -> IO GameState --set the input

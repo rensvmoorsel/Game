@@ -21,7 +21,10 @@ view gameState@(GameState maze status input elapsedTime prevKey lastLevel) | sta
                                                                             o <- drawBMP $ orangeEnemy maze
                                                                             r <- drawBMP $ redEnemy maze
                                                                             return $ Pictures [pacman, p, b, o, r, viewPure gameState]
-                                                                    | otherwise = loadBMP "src\\Images\\StartScreen.bmp"
+                                                                    | otherwise = do --draw the startscreen (the unlocked levels)
+                                                                                    levels <- unlockedLevels
+                                                                                    return $ Color white $ scale 0.2 0.2 $ Pictures [translate (-2000) 0 $ text $ "You have unlocked levels: " ++ foldr (\level oldString -> show level ++ " " ++ oldString) "" levels,
+                                                                                                                        translate (-2000) (-200) $ text "Hit the number keys to select level" ] 
 
 viewPure :: GameState -> Picture --draw the pure parts of the game (the grid)
 viewPure gstate = Pictures $ map draw $ grid $ maze gstate
