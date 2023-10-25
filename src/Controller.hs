@@ -12,12 +12,27 @@ import Data.Char (isDigit, ord)
 
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState --IO WANT RANDOM GEDEELTE KOMT ERIN
-step secs gstate | status gstate == Ended && pressedKey gstate == L1 || pressedKey gstate == L2 = loadLevel $ keyToInt $ pressedKey gstate
+step secs gstate | (status gstate == Failed || status gstate == Complete)
+                        && (pressedKey gstate == L1 || pressedKey gstate == L2) = do
+                                                                                    levels <- unlockedLevels
+                                                                                    let levelInt = keyToInt (pressedKey gstate)
+                                                                                    if levelInt `elem` levels then loadLevel levelInt else return $ updateObject gstate secs gstate
+                 | status gstate == Complete = do --save level completed if not already done
+                                                levels <- unlockedLevels
+                                                let nextLevel = lastLevel gstate + 1 --find next level
+                                                if nextLevel `notElem` levels && isLevel nextLevel then --if level exists and not unlocked yet: unlock it
+                                                    do
+                                                        appendFile "src\\levels\\UnlockedLevels.txt" $ ' ':show nextLevel 
+                                                        return $ updateObject gstate secs gstate
+                                                else return $ updateObject gstate secs gstate
                  | otherwise = return $ updateObject gstate secs gstate
 
 keyToInt :: Model.Key -> Int --convert a level key to the int of the level
 keyToInt L1 = 1
 keyToInt L2 = 2
+
+isLevel :: Int -> Bool --check if level exists
+isLevel level = level <= 2 && level > 0
 
 -- | Handle user input
 input :: Event -> GameState -> IO GameState --set the input

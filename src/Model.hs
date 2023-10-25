@@ -4,6 +4,7 @@ module Model where
 import Graphics.Gloss
 import Data.List (elemIndex)
 import Data.Maybe
+import Data.Char (ord)
 
 --GameState objects
 data Maze = MkMaze {
@@ -30,7 +31,7 @@ data Position = MkPosition {
   , y :: Float
 }
 data Line = MkLine Position Position
-data StatusGame = Running | Paused | Ended
+data StatusGame = Running | Paused | Complete | Failed
 data Direction = Left | Right | Up | Down
 data Key = W | A | S | D | Esc | None | L1 | L2
 
@@ -56,7 +57,8 @@ instance Show EnemyColor where
 instance Eq StatusGame where
   Running == Running = True
   Paused == Paused = True
-  Ended == Ended = True
+  Complete == Complete = True
+  Failed == Failed = True
   _ == _ = False
 
 instance Eq Key where
@@ -77,6 +79,7 @@ data GameState = GameState {
                  , pressedKey :: Key
                  , elapsedTime :: Float
                  , previousKey :: Key
+                 , lastLevel :: Int
                  }
 
 initialState :: GameState --The gamestate when nothing has happened yet
@@ -86,7 +89,7 @@ initialState = let grid = createGrid []
                    b = MkEnemy Blue (MkPosition 90 60) Up
                    o = MkEnemy Orange (MkPosition 120 120) Up
                    r = MkEnemy Red (MkPosition 300 120) Up
-               in GameState (MkMaze grid pacman p b o r) Ended None 0 None
+               in GameState (MkMaze grid pacman p b o r) Failed None 0 None 1
 
 tiletoPath :: Tile -> Path --convert a tile to the positions of the tile
 tiletoPath (Wall x y) = let p1 = ((-30 + 30 * fromIntegral x) - 420, (15 - 30 * fromIntegral y) + 480)
@@ -124,7 +127,8 @@ loadLevel level = do
                         status = Running,
                         pressedKey = None,
                         elapsedTime = 0,
-                        previousKey = None
+                        previousKey = None,
+                        lastLevel = level
                     }
                     where
                         loadLine :: String -> Int -> Int -> [Tile] --convert a line into a list of tiles
@@ -174,3 +178,8 @@ loadLevel level = do
 
 createGrid :: [Tile] -> [Tile] -- fills empty spots of grid with empty tiles
 createGrid list = [ Empty x y | x <- [1 .. 28], y <- [1 .. 31], Empty x y `notElem` list] ++ list
+
+unlockedLevels :: IO [Int]
+unlockedLevels = do
+                    content <- readFile "src\\levels\\UnlockedLevels.txt"
+                    return $ map read $ words content

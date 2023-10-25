@@ -38,15 +38,16 @@ instance Updatable Tile where
     updateObject x _ _ = x --it isn't a circle so it's a static object, keep it as it is
 
 instance Updatable StatusGame where
-    updateObject Ended _ _ = Ended
     updateObject Paused _ gstate | pressedKey gstate == Esc = Running --the game is paused and esc is pressed: resume
                                  | otherwise = Paused
     updateObject Running _ gstate | pressedKey gstate == Esc = Paused --The game is running and esc is pressed: pause  --CHECK OOK NOG OF FINISHED
                                   | otherwise = Running
+    updateObject s _ _ = s
 
 
 instance Updatable GameState where
-    updateObject _ secs gstate  | status gstate == Running = gstate {
+    updateObject _ secs gstate  | levelCompleted $ grid (maze gstate) = gstate {status = Complete}
+                                | status gstate == Running = gstate {
                                                                         maze = updateObject (maze gstate) secs gstate, --update the maze 
                                                                         elapsedTime = elapsedTime gstate + secs, --update the elapsed time
                                                                         status = updateObject (status gstate) secs gstate, --update the game status
@@ -57,6 +58,13 @@ instance Updatable GameState where
                                                             status = updateObject (status gstate) secs gstate, --update the game status
                                                             pressedKey = None --reset the pressed key
                                                         }
+
+levelCompleted :: [Tile] -> Bool
+levelCompleted = foldr f True 
+                    where
+                        f :: Tile -> Bool -> Bool
+                        f Circle{} _ = False
+                        f _ b = b
 
 
 instance Updatable Maze where
