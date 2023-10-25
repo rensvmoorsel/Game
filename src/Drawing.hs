@@ -22,24 +22,24 @@ instance Drawable Tile where
 instance IODrawable PacMan where
     drawBMP (MkPacMan (MkPosition x y) _ Closed) = do
                                         pacManImage <- loadBMP "src\\Images\\PacmanClosed.bmp"
-                                        return $ Translate x y pacManImage
+                                        return $ Translate (x - 405) (-y + 450) pacManImage
     drawBMP (MkPacMan (MkPosition x y) Model.Up Open) = do
                                                             pacManImage <- loadBMP "src\\Images\\PacmanOpenUp.bmp"
-                                                            return $ Translate x y pacManImage
+                                                            return $ Translate (x - 405) (-y + 450) pacManImage
     drawBMP (MkPacMan (MkPosition x y) Model.Down Open) = do
                                                             pacManImage <- loadBMP "src\\Images\\PacmanOpenDown.bmp"
-                                                            return $ Translate x y pacManImage
+                                                            return $ Translate (x - 405) (-y + 450) pacManImage
     drawBMP (MkPacMan (MkPosition x y) Model.Left Open) = do
                                                             pacManImage <- loadBMP "src\\Images\\PacmanOpenLeft.bmp"
-                                                            return $ Translate x y pacManImage
+                                                            return $ Translate (x - 405) (-y + 450) pacManImage
     drawBMP (MkPacMan (MkPosition x y) Model.Right Open) = do
                                                             pacManImage <- loadBMP "src\\Images\\PacmanOpenRight.bmp"
-                                                            return $ Translate x y pacManImage
+                                                            return $ Translate (x - 405) (-y + 450) pacManImage
 
 instance IODrawable Enemy where
     drawBMP e@(MkEnemy _ (MkPosition x y) _) = do
                                                     image <- loadBMP $ "src\\Images\\" ++ enemyImageName e
-                                                    return $ Translate x y image
+                                                    return $ Translate (x - 405) (-y + 450) image
                                                     where
                                                             enemyImageName' :: Direction -> String
                                                             enemyImageName' Model.Up = "Up.bmp"

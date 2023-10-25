@@ -3,29 +3,33 @@
 module Controller where
 
 import Model
+import Update
 
 import Graphics.Gloss
-import Graphics.Gloss.Interface.IO.Game
+import Graphics.Gloss.Interface.IO.Game as G
 import System.Random
+import Data.Char (isDigit, ord)
 
 -- | Handle one iteration of the game
-step :: Float -> GameState -> IO GameState
-step secs = return
- -- | elapsedTime gstate + secs > nO_SECS_BETWEEN_CYCLES
- -- = -- We show a new random number
-   -- do randomNumber <- randomIO
-   --    let newNumber = abs randomNumber `mod` 10
-  --     return $ GameState (ShowANumber newNumber) 0
- -- | otherwise
- -- = -- Just update the elapsed time
-   -- return $ gstate { elapsedTime = elapsedTime gstate + secs }
+step :: Float -> GameState -> IO GameState --IO WANT RANDOM GEDEELTE KOMT ERIN
+step secs gstate | status gstate == Ended && pressedKey gstate == L1 || pressedKey gstate == L2 = loadLevel $ keyToInt $ pressedKey gstate
+                 | otherwise = return $ updateObject gstate secs gstate
+
+keyToInt :: Model.Key -> Int
+keyToInt L1 = 1
+keyToInt L2 = 2
 
 -- | Handle user input
-input :: Event -> GameState -> IO GameState
-input e gstate = return (inputKey e gstate)
+input :: Event -> GameState -> IO GameState --set the input
+input e gstate = return $ inputKey e gstate
 
-inputKey :: Event -> GameState -> GameState
---inputKey (EventKey (Char c) _ _ _) gstate
-  -- = If the user presses a character key, show that one
-    --gstate { infoToShow = ShowAChar c }
-inputKey _ gstate = gstate -- Otherwise keep the same
+
+inputKey :: Event -> GameState -> GameState --check which button is pressed
+inputKey (EventKey (SpecialKey KeyEsc) G.Down _ _) gstate = gstate { pressedKey = Esc }
+inputKey (EventKey (Char 'w') G.Down _ _) gstate = gstate { pressedKey = W }
+inputKey (EventKey (Char 'a') G.Down _ _) gstate = gstate { pressedKey = A }
+inputKey (EventKey (Char 's') G.Down _ _) gstate = gstate { pressedKey = S }
+inputKey (EventKey (Char 'd') G.Down _ _) gstate = gstate { pressedKey = D }
+inputKey (EventKey (Char '1') G.Down _ _) gstate = gstate { pressedKey = L1 }
+inputKey (EventKey (Char '2') G.Down _ _) gstate = gstate { pressedKey = L2 }
+inputKey _ gstate = gstate { pressedKey = None }

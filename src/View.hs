@@ -7,28 +7,19 @@ import Model
 import Data.Maybe (mapMaybe)
 import Drawing
 
-view :: GameState -> IO Picture
-view gameState@(GameState maze Ended) = do
-                                                        gameScreen <- view (GameState maze Running)
-                                                        pauseScreen <- loadBMP "src\\Images\\StartScreen.bmp"
-                                                        return $ Pictures [gameScreen, pauseScreen]
-view gameState@(GameState maze Paused) = do
-                                                        gameScreen <- view (GameState maze Running)
+view :: GameState -> IO Picture --draw the impure parts
+view gameState@(GameState maze Ended input elapsedTime prevKey) = loadBMP "src\\Images\\StartScreen.bmp" --the game is ended, draw the start screen
+view gameState@(GameState maze Paused input elapsedTime prevKey) = do --the game is paused, draw the state with pause screen over it
+                                                        gameScreen <- view (GameState maze Running input elapsedTime prevKey)
                                                         pauseScreen <- loadBMP "src\\Images\\PauseScreen.bmp"
                                                         return $ Pictures [gameScreen, pauseScreen]
-view gameState@(GameState (MkMaze 
-                            {pacman = pacman, 
-                            pinkEnemy = pinkEnemy, 
-                            blueEnemy = blueEnemy, 
-                            orangeEnemy = orangeEnemy, 
-                            redEnemy = redEnemy}) 
-                                _) = do
-                                        pacman <- drawBMP pacman
-                                        p <- drawBMP pinkEnemy
-                                        b <- drawBMP blueEnemy
-                                        o <- drawBMP orangeEnemy
-                                        r <- drawBMP redEnemy
+view gameState@(GameState maze  _ _ _ _) = do --draw the gamestate
+                                        pacman <- drawBMP $ pacman maze
+                                        p <- drawBMP $ pinkEnemy maze
+                                        b <- drawBMP $ blueEnemy maze
+                                        o <- drawBMP $ orangeEnemy maze
+                                        r <- drawBMP $ redEnemy maze
                                         return $ Pictures [pacman, p, b, o, r, viewPure gameState]
 
-viewPure :: GameState -> Picture
-viewPure (GameState (MkMaze walls _ _ _ _ _) _) = Pictures $ map draw walls
+viewPure :: GameState -> Picture --draw the pure parts of the game (the grid)
+viewPure (GameState maze _ _ _ _) = Pictures $ map draw (grid maze)

@@ -1,4 +1,4 @@
-name:                gloss-counter
+name:                pacman
 version:             0.1.0.0
 author:              Alejandro Serrano
 maintainer:          A.SerranoMena@uu.nl
@@ -17,4 +17,5 @@ executable gloss-counter
                      , Model
                      , View
                      , Drawing
+                     , Update
   default-language:    Haskell2010
