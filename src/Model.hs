@@ -102,11 +102,11 @@ realPosition (Model.Circle x y) = MkPosition (fromIntegral x * 30 - 30) (fromInt
 realPosition (Empty x y) = MkPosition (fromIntegral x * 30 - 30) (fromIntegral y * 30 - 30)
 realPosition (Wall x y) = MkPosition (fromIntegral x * 30 - 30) (fromIntegral y * 30 - 30)
 
-loadLevel :: Int -> IO GameState
+loadLevel :: Int -> IO GameState --read a level file
 loadLevel level = do
-                    levelContent <- readFile $ "src\\levels\\"++ show level ++ ".txt"
-                    let levelLines = lines levelContent
-                    return GameState {
+                    levelContent <- readFile $ "src\\levels\\"++ show level ++ ".txt" --read the file
+                    let levelLines = lines levelContent --split the lines
+                    return GameState { --create the gamestate
                         maze = MkMaze
                         {
                             grid = createGrid $ loadLines levelLines 1,
@@ -127,46 +127,47 @@ loadLevel level = do
                         previousKey = None
                     }
                     where
-                        loadLine :: String -> Int -> Int -> [Tile]
+                        loadLine :: String -> Int -> Int -> [Tile] --convert a line into a list of tiles
                         loadLine [] _ _ = []
                         loadLine (item:items) x y | item == 'W' = Wall x y:loadLine items (x + 1) y
                                                    | otherwise = Empty x y: loadLine items (x + 1) y
-                        loadLines :: [String] -> Int -> [Tile]
+
+                        loadLines :: [String] -> Int -> [Tile] -- load all lines
                         loadLines [] _ = []
                         loadLines (line:lines) y = loadLine line 1 y ++ loadLines lines (y + 1)
 
-                        orangePosition :: [String] -> Position
+                        orangePosition :: [String] -> Position --find the position of orange, starting by the first row
                         orangePosition a = orangePosition' a 1
 
-                        redPosition :: [String] -> Position
+                        redPosition :: [String] -> Position --find the position of red, starting by the first row
                         redPosition a = redPosition' a 1
 
-                        bluePosition :: [String] -> Position
+                        bluePosition :: [String] -> Position --find the position of blue, starting by the first row
                         bluePosition a = bluePosition' a 1
 
-                        pinkPosition :: [String] -> Position
+                        pinkPosition :: [String] -> Position --find the position of pink, starting by the first row
                         pinkPosition a = pinkPosition' a 1
 
-                        pacmanPosition :: [String] -> Position
+                        pacmanPosition :: [String] -> Position --find the position of pacman, starting by the first row
                         pacmanPosition a = pacmanPosition' a 1
 
-                        orangePosition' :: [String] -> Int -> Position
+                        orangePosition' :: [String] -> Int -> Position --check each row if it has the correct char, determine the location with the row it is in and the index in the row
                         orangePosition' (x:xs) y | 'o' `elem` x = MkPosition (fromIntegral (fromMaybe 0 (elemIndex 'o' x)) * 30) (fromIntegral y * 30)
                                                 | otherwise = orangePosition' xs (y + 1)
 
-                        redPosition' :: [String] -> Int -> Position
+                        redPosition' :: [String] -> Int -> Position--check each row if it has the correct char, determine the location with the row it is in and the index in the row
                         redPosition' (x:xs) y | 'r' `elem` x = MkPosition (fromIntegral (fromMaybe 0 (elemIndex 'r' x)) * 30) (fromIntegral y * 30)
                                                 | otherwise = redPosition' xs (y + 1)
 
-                        bluePosition' :: [String] -> Int -> Position
+                        bluePosition' :: [String] -> Int -> Position--check each row if it has the correct char, determine the location with the row it is in and the index in the row
                         bluePosition' (x:xs) y | 'b' `elem` x = MkPosition (fromIntegral (fromMaybe 0 (elemIndex 'b' x)) * 30) (fromIntegral y * 30)
                                                 | otherwise = bluePosition' xs (y + 1)
 
-                        pinkPosition' :: [String] -> Int -> Position
+                        pinkPosition' :: [String] -> Int -> Position--check each row if it has the correct char, determine the location with the row it is in and the index in the row
                         pinkPosition' (x:xs) y | 'p' `elem` x = MkPosition (fromIntegral (fromMaybe 0 (elemIndex 'p' x)) * 30) (fromIntegral y * 30)
                                                 | otherwise = pinkPosition' xs (y + 1)
 
-                        pacmanPosition' :: [String] -> Int -> Position
+                        pacmanPosition' :: [String] -> Int -> Position--check each row if it has the correct char, determine the location with the row it is in and the index in the row
                         pacmanPosition' (x:xs) y | 'P' `elem` x = MkPosition (fromIntegral (fromMaybe 0 (elemIndex 'P' x)) * 30) (fromIntegral y * 30)
                                                 | otherwise = pacmanPosition' xs (y + 1)
 

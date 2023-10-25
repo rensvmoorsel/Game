@@ -15,7 +15,7 @@ step :: Float -> GameState -> IO GameState --IO WANT RANDOM GEDEELTE KOMT ERIN
 step secs gstate | status gstate == Ended && pressedKey gstate == L1 || pressedKey gstate == L2 = loadLevel $ keyToInt $ pressedKey gstate
                  | otherwise = return $ updateObject gstate secs gstate
 
-keyToInt :: Model.Key -> Int
+keyToInt :: Model.Key -> Int --convert a level key to the int of the level
 keyToInt L1 = 1
 keyToInt L2 = 2
 
