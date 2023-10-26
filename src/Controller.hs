@@ -10,6 +10,7 @@ import Graphics.Gloss.Interface.IO.Game as G
 import System.Random
 import Data.Char (isDigit, ord)
 import System.Directory
+import LevelLoading
 
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState --IO WANT RANDOM GEDEELTE KOMT ERIN
@@ -18,7 +19,7 @@ step secs gstate | (status gstate == Failed || status gstate == Complete)
                                                                                     levels <- unlockedLevels
                                                                                     let levelInt = keyToInt (pressedKey gstate)
                                                                                     if levelInt `elem` levels then loadLevel levelInt else return $ updateObject gstate secs gstate
-                 | status gstate == Complete = do --save level completed if not already done
+                 | status gstate == Complete = do --add level to the completed levels file if not already done
                                                 levels <- unlockedLevels
                                                 let nextLevel = lastLevel gstate + 1 --find next level
                                                 levelExists <- isLevel nextLevel

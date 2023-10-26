@@ -19,4 +19,6 @@ executable pacman
                      , View
                      , Drawing
                      , Update
+                     , Grid
+                     , LevelLoading
   default-language:    Haskell2010

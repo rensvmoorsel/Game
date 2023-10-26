@@ -6,6 +6,7 @@ import Graphics.Gloss
 import Model
 import Data.Maybe (mapMaybe)
 import Drawing
+import LevelLoading
 
 view :: GameState -> IO Picture --draw the impure parts
 view gameState@(GameState maze status input elapsedTime prevKey lastLevel) | status == Paused 
