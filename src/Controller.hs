@@ -11,16 +11,18 @@ import System.Random
 import Data.Char (isDigit, ord)
 import System.Directory
 import LevelLoading
+import Data.List
 
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState
-step secs gstate | (status gstate == Failed || status gstate == Complete) --if game isn't running and a number is pressed and the level is unlocked: load the level
-                        && (pressedKey gstate == L1 || pressedKey gstate == L2 || pressedKey gstate == L3 || pressedKey gstate == L4 || pressedKey gstate == L5 || pressedKey gstate == L6 || pressedKey gstate == L7 || pressedKey gstate == L8 || pressedKey gstate == L9) 
-                        && keyToInt (pressedKey gstate) `elem` unlockedLevels gstate = 
+step secs gstate | status gstate == Complete && (lastLevel gstate + 1) `notElem` unlockedLevels gstate && elem (lastLevel gstate + 1) (levels gstate) = do --add level to the completed levels file if not already done
+                                                        let unlockedLevel = lastLevel gstate + 1
+                                                        appendFile "src\\levels\\UnlockedLevels.txt" $ ' ':show unlockedLevel
+                                                        return $ (updateObject gstate secs gstate) {unlockedLevels = sort $ unlockedLevel : unlockedLevels gstate}
+                  | (status gstate == Failed || status gstate == Complete) --if game isn't running and a number is pressed and the level is unlocked: load the level
+                        && (pressedKey gstate == L1 || pressedKey gstate == L2 || pressedKey gstate == L3 || pressedKey gstate == L4 || pressedKey gstate == L5 || pressedKey gstate == L6 || pressedKey gstate == L7 || pressedKey gstate == L8 || pressedKey gstate == L9)
+                        && keyToInt (pressedKey gstate) `elem` unlockedLevels gstate =
                             loadLevel gstate $ keyToInt (pressedKey gstate)
-                 | status gstate == Complete && (lastLevel gstate + 1) `elem` unlockedLevels gstate && elem (lastLevel gstate + 1) (levels gstate) = do --add level to the completed levels file if not already done
-                                                        appendFile "src\\levels\\UnlockedLevels.txt" $ ' ':show (lastLevel gstate + 1)
-                                                        return $ updateObject gstate {unlockedLevels = (lastLevel gstate + 1):unlockedLevels gstate} secs gstate
                  | otherwise = return $ updateObject gstate secs gstate
 
 keyToInt :: Model.Key -> Int --convert a level key to the int of the level

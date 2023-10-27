@@ -69,7 +69,7 @@ instance Updatable StatusGame where
 
 
 instance Updatable GameState where
-    updateObject _ secs gstate  | levelCompleted $ grid (maze gstate) = gstate {status = Complete}
+    updateObject _ secs gstate  | levelCompleted (grid (maze gstate)) && status gstate == Running = gstate {status = Complete}
                                 | status gstate == Running = gstate {
                                                                         maze = updateObject (maze gstate) secs gstate, --update the maze 
                                                                         elapsedTime = elapsedTime gstate + secs, --update the elapsed time
@@ -86,7 +86,7 @@ levelCompleted :: Grid -> Bool --check if level is completed by checking if ther
 levelCompleted = foldr f True
                     where
                         f :: Tile -> Bool -> Bool
-                        f Circle{} _ = False
+                        f Circle{} _ = True
                         f _ b = b
 
 
