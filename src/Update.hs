@@ -83,7 +83,7 @@ instance Updatable GameState where
                                                         }
 
 levelCompleted :: Grid -> Bool --check if level is completed by checking if there are no circles
-levelCompleted = foldr f False
+levelCompleted = foldr f True
                     where
                         f :: Tile -> Bool -> Bool
                         f Circle{} _ = False

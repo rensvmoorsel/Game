@@ -29,6 +29,10 @@ instance Show Tile where
   show (Grid.Circle _) = "Circle"
   show (Empty _) = "Empty"
 
+instance Eq Coordinate where
+  (MkCoordinate x y) == (MkCoordinate x2 y2) = x == x2 && y == y2
+  (MkCoordinate x y) /= (MkCoordinate x2 y2) = x /= x2 || y /= y2
+
 tiletoPath :: Tile -> Path --convert a tile to the positions of the tile
 tiletoPath (Wall coordinate) = let
                             x = xCoord coordinate

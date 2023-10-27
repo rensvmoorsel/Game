@@ -92,9 +92,9 @@ initialState :: GameState --The gamestate when nothing has happened yet
 initialState = let grid = []
                    emptyPicture = polygon []
                    pacman = MkPacMan (MkPosition 30 30) Down Open emptyPicture emptyPicture emptyPicture emptyPicture emptyPicture
-                   p = MkEnemy Pink (MkPosition 60 90) Up emptyPicture emptyPicture emptyPicture emptyPicture
-                   b = MkEnemy Blue (MkPosition 90 60) Up emptyPicture emptyPicture emptyPicture emptyPicture
-                   o = MkEnemy Orange (MkPosition 120 120) Up emptyPicture emptyPicture emptyPicture emptyPicture
-                   r = MkEnemy Red (MkPosition 300 120) Up emptyPicture emptyPicture emptyPicture emptyPicture
+                   p = MkEnemy Pink (MkPosition 30 30) Up emptyPicture emptyPicture emptyPicture emptyPicture
+                   b = MkEnemy Blue (MkPosition 30 30) Up emptyPicture emptyPicture emptyPicture emptyPicture
+                   o = MkEnemy Orange (MkPosition 30 30) Up emptyPicture emptyPicture emptyPicture emptyPicture
+                   r = MkEnemy Red (MkPosition 30 30) Up emptyPicture emptyPicture emptyPicture emptyPicture
                in GameState (MkMaze grid pacman p b o r) Failed None 0 None 1 [] [] []
 
