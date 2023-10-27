@@ -13,34 +13,30 @@ import System.Directory
 import LevelLoading
 
 -- | Handle one iteration of the game
-step :: Float -> GameState -> IO GameState --IO WANT RANDOM GEDEELTE KOMT ERIN
-step secs gstate | (status gstate == Failed || status gstate == Complete)
-                        && (pressedKey gstate == L1 || pressedKey gstate == L2) = do
-                                                                                    levels <- unlockedLevels
-                                                                                    let levelInt = keyToInt (pressedKey gstate)
-                                                                                    if levelInt `elem` levels then loadLevel levelInt else return $ updateObject gstate secs gstate
-                 | status gstate == Complete = do --add level to the completed levels file if not already done
-                                                levels <- unlockedLevels
-                                                let nextLevel = lastLevel gstate + 1 --find next level
-                                                levelExists <- isLevel nextLevel
-                                                if nextLevel `notElem` levels && levelExists then --if level exists and not unlocked yet: unlock it
-                                                    do
-                                                        appendFile "src\\levels\\UnlockedLevels.txt" $ ' ':show nextLevel 
-                                                        return $ updateObject gstate secs gstate
-                                                else return $ updateObject gstate secs gstate
+step :: Float -> GameState -> IO GameState
+step secs gstate | (status gstate == Failed || status gstate == Complete) --if game isn't running and a number is pressed and the level is unlocked: load the level
+                        && (pressedKey gstate == L1 || pressedKey gstate == L2 || pressedKey gstate == L3 || pressedKey gstate == L4 || pressedKey gstate == L5 || pressedKey gstate == L6 || pressedKey gstate == L7 || pressedKey gstate == L8 || pressedKey gstate == L9) 
+                        && keyToInt (pressedKey gstate) `elem` unlockedLevels gstate = 
+                            loadLevel gstate $ keyToInt (pressedKey gstate)
+                 | status gstate == Complete && (lastLevel gstate + 1) `elem` unlockedLevels gstate && elem (lastLevel gstate + 1) (levels gstate) = do --add level to the completed levels file if not already done
+                                                        appendFile "src\\levels\\UnlockedLevels.txt" $ ' ':show (lastLevel gstate + 1)
+                                                        return $ updateObject gstate {unlockedLevels = (lastLevel gstate + 1):unlockedLevels gstate} secs gstate
                  | otherwise = return $ updateObject gstate secs gstate
 
 keyToInt :: Model.Key -> Int --convert a level key to the int of the level
 keyToInt L1 = 1
 keyToInt L2 = 2
-
-isLevel :: Int -> IO Bool --check if level exists
-isLevel level = doesFileExist $ "src\\levels\\" ++ show level ++ ".txt"
+keyToInt L3 = 3
+keyToInt L4 = 4
+keyToInt L5 = 5
+keyToInt L6 = 6
+keyToInt L7 = 7
+keyToInt L8 = 8
+keyToInt L9 = 9
 
 -- | Handle user input
 input :: Event -> GameState -> IO GameState --set the input
 input e gstate = return $ inputKey e gstate
-
 
 inputKey :: Event -> GameState -> GameState --check which button is pressed
 inputKey (EventKey (SpecialKey KeyEsc) G.Down _ _) gstate = gstate { pressedKey = Esc }
@@ -50,4 +46,11 @@ inputKey (EventKey (Char 's') G.Down _ _) gstate = gstate { pressedKey = S }
 inputKey (EventKey (Char 'd') G.Down _ _) gstate = gstate { pressedKey = D }
 inputKey (EventKey (Char '1') G.Down _ _) gstate = gstate { pressedKey = L1 }
 inputKey (EventKey (Char '2') G.Down _ _) gstate = gstate { pressedKey = L2 }
+inputKey (EventKey (Char '3') G.Down _ _) gstate = gstate { pressedKey = L3 }
+inputKey (EventKey (Char '4') G.Down _ _) gstate = gstate { pressedKey = L4 }
+inputKey (EventKey (Char '5') G.Down _ _) gstate = gstate { pressedKey = L5 }
+inputKey (EventKey (Char '6') G.Down _ _) gstate = gstate { pressedKey = L6 }
+inputKey (EventKey (Char '7') G.Down _ _) gstate = gstate { pressedKey = L7 }
+inputKey (EventKey (Char '8') G.Down _ _) gstate = gstate { pressedKey = L8 }
+inputKey (EventKey (Char '9') G.Down _ _) gstate = gstate { pressedKey = L9 }
 inputKey _ gstate = gstate { pressedKey = None }

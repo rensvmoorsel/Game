@@ -22,13 +22,26 @@ data PacMan = MkPacMan {
                         position :: Position
                         , direction :: Direction
                         , mouthStatus :: MouthStatus
+                        , spriteclosed :: Picture
+                        , spriteleft :: Picture
+                        , spriteright :: Picture
+                        , spriteup :: Picture
+                        , spritedown :: Picture
                         }
 data MouthStatus = Open | Closed
-data Enemy = MkEnemy EnemyColor Position Direction
+data Enemy = MkEnemy {
+                        enemycolor :: EnemyColor
+                        , enemyposition :: Position
+                        , enemydirection :: Direction
+                        , enemyspriteLeft :: Picture
+                        , enemyspriteRight :: Picture
+                        , enemyspriteUp :: Picture
+                        , enemyspriteDown :: Picture
+                      }
 data EnemyColor = Red | Orange | Pink | Blue
 data Line = MkLine Position Position
 data StatusGame = Running | Paused | Complete | Failed
-data Key = W | A | S | D | Esc | None | L1 | L2
+data Key = W | A | S | D | Esc | None | L1 | L2 | L3 | L4 | L5 | L6 | L7 | L8 | L9
 
 --Instances for the datatypes
 instance Show EnemyColor where
@@ -70,14 +83,18 @@ data GameState = GameState {
                  , elapsedTime :: Float
                  , previousKey :: Key
                  , lastLevel :: Int
+                 , unlockedLevels :: [Int]
+                 , levels :: [Int]
+                 , levelcontents :: [Maze]
                  }
 
 initialState :: GameState --The gamestate when nothing has happened yet
 initialState = let grid = []
-                   pacman = MkPacMan (MkPosition 30 30) Down Open
-                   p = MkEnemy Pink (MkPosition 60 90) Up
-                   b = MkEnemy Blue (MkPosition 90 60) Up
-                   o = MkEnemy Orange (MkPosition 120 120) Up
-                   r = MkEnemy Red (MkPosition 300 120) Up
-               in GameState (MkMaze grid pacman p b o r) Failed None 0 None 1
+                   emptyPicture = polygon []
+                   pacman = MkPacMan (MkPosition 30 30) Down Open emptyPicture emptyPicture emptyPicture emptyPicture emptyPicture
+                   p = MkEnemy Pink (MkPosition 60 90) Up emptyPicture emptyPicture emptyPicture emptyPicture
+                   b = MkEnemy Blue (MkPosition 90 60) Up emptyPicture emptyPicture emptyPicture emptyPicture
+                   o = MkEnemy Orange (MkPosition 120 120) Up emptyPicture emptyPicture emptyPicture emptyPicture
+                   r = MkEnemy Red (MkPosition 300 120) Up emptyPicture emptyPicture emptyPicture emptyPicture
+               in GameState (MkMaze grid pacman p b o r) Failed None 0 None 1 [] [] []
 

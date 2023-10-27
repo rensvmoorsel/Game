@@ -7,7 +7,7 @@ class Updatable a where
     updateObject :: a -> Float -> GameState -> a
 
 instance Updatable PacMan where
-    updateObject pacman@(MkPacMan pos dir mouth) deltaTime gstate = MkPacMan (updatePosition deltaTime pos validatedDir) validatedDir (updateMouth mouth)
+    updateObject pacman@(MkPacMan pos dir mouth im1 im2 im3 im4 im5) deltaTime gstate = MkPacMan (updatePosition deltaTime pos validatedDir) validatedDir (updateMouth mouth) im1 im2 im3 im4 im5
                                                                         where
                                                                             updateMouth :: MouthStatus -> MouthStatus --set the correct mouth status
                                                                             updateMouth Open = Closed
@@ -83,7 +83,7 @@ instance Updatable GameState where
                                                         }
 
 levelCompleted :: Grid -> Bool --check if level is completed by checking if there are no circles
-levelCompleted = foldr f True
+levelCompleted = foldr f False
                     where
                         f :: Tile -> Bool -> Bool
                         f Circle{} _ = False
