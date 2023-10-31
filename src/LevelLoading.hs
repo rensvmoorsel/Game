@@ -10,7 +10,7 @@ loadLevel :: GameState -> Int -> IO GameState
 loadLevel gstate level = do
                             let updatedMaze = levelcontents gstate!!(level - 1)
                             updatedGrid <-  mapM (circleFiller updatedMaze) (grid updatedMaze)
-                            return gstate {maze =  updatedMaze {grid = updatedGrid}, status = Running}
+                            return gstate {maze =  updatedMaze {grid = updatedGrid}, status = Running, elapsedTime = 0}
 
 circleFiller :: Maze -> Tile -> IO Tile
 circleFiller m (Empty coordinate) = do 

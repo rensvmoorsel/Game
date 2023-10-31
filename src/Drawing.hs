@@ -25,10 +25,10 @@ instance Drawable PacMan where
     draw (MkPacMan (MkPosition x y) Down Open _ _ _ _ image) = moveSprite (x, y) image
 
 instance Drawable Enemy where
-    draw e@(MkEnemy _ (MkPosition x y) Grid.Left image _ _ _) = moveSprite (x, y) image               
-    draw e@(MkEnemy _ (MkPosition x y) Grid.Right _ image _ _) = moveSprite (x, y) image               
-    draw e@(MkEnemy _ (MkPosition x y) Up _ _ image _) = moveSprite (x, y) image               
-    draw e@(MkEnemy _ (MkPosition x y) Down _ _ _ image) = moveSprite (x, y) image  
+    draw e@(MkEnemy {enemyposition = MkPosition {x = x, y = y}, enemydirection = Grid.Left, enemyspriteLeft = image}) = moveSprite (x, y) image               
+    draw e@(MkEnemy {enemyposition = MkPosition {x = x, y = y}, enemydirection = Grid.Right, enemyspriteRight = image}) = moveSprite (x, y) image               
+    draw e@(MkEnemy  {enemyposition = MkPosition {x = x, y = y}, enemydirection = Up, enemyspriteUp = image}) = moveSprite (x, y) image               
+    draw e@(MkEnemy  {enemyposition = MkPosition {x = x, y = y}, enemydirection = Down, enemyspriteDown = image}) = moveSprite (x, y) image  
 
 instance Drawable Maze where
     draw (MkMaze g pm p b o r) = Pictures $ draw pm:draw p:draw b:draw o:draw r:map draw g 

@@ -12,6 +12,8 @@ data Position = MkPosition {
 }
 type Grid = [Tile]
 
+data Vector2 = MkVector2 Float Float
+
 --instances for these datatypes
 instance Eq Tile where
   Wall coordinate1 == Empty coordinate2 = xCoord coordinate1 == xCoord coordinate2 && yCoord coordinate1 == yCoord coordinate2
@@ -74,3 +76,5 @@ nextBlock grid Grid.Left = leftBlock grid
 nextBlock grid Grid.Right = rightBlock grid
 nextBlock grid Grid.Down = bottomBlock grid
 
+roundTo30 :: Float -> Float --round to block if direction switched
+roundTo30 value = fromInteger (round (value / 30) * 30)
