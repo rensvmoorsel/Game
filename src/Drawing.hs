@@ -35,7 +35,7 @@ instance Drawable Maze where
 
 instance Drawable GameState where
     draw GameState {status = Running, maze = maze} = draw maze
-    draw GameState {status = Paused, maze = maze} = Color white $ Pictures [draw maze, scale 0.2 0.2 $ translate (-100) 0 $ text "Paused "]   
+    draw GameState {status = Paused, maze = maze} = Color red $ Pictures [draw maze, scale 0.2 0.2 $ translate (-100) 0 $ text "Paused "]   
     draw GameState {unlockedLevels = levels} = Color white $ scale 0.2 0.2 $ Pictures [translate (-2000) 0 $ text $ "You have unlocked levels: " ++ foldr (\level oldString -> show level ++ " " ++ oldString) "" levels,
                                                                                                                         translate (-2000) (-200) $ text "Hit the number keys to select level" ] 
 

@@ -7,12 +7,8 @@ class Updatable a where
     updateObject :: a -> Float -> GameState -> a
 
 instance Updatable PacMan where
-    updateObject pacman@(MkPacMan pos dir mouth im1 im2 im3 im4 im5) deltaTime gstate = MkPacMan (updatePosition deltaTime pos validatedDir) validatedDir (updateMouth mouth) im1 im2 im3 im4 im5
+    updateObject pacman@(MkPacMan pos dir mouth im1 im2 im3 im4 im5) deltaTime gstate = MkPacMan (updatePosition deltaTime pos validatedDir) validatedDir mouth im1 im2 im3 im4 im5
                                                                         where
-                                                                            updateMouth :: MouthStatus -> MouthStatus --set the correct mouth status
-                                                                            updateMouth Open = Closed
-                                                                            updateMouth Closed = Open
-
                                                                             updatePosition :: Float -> Position -> Direction -> Position --update the position based on the direction and deltatime
                                                                             updatePosition dt position@MkPosition{x = x, y = y} Up = position {y = y - dt * 30, x = roundTo30 x } --Deze 4 alleen als het blok erna geen wall is, anders: zet stil op afgeronde positie
                                                                             updatePosition dt position@MkPosition{x = x, y = y} Down = position {y = y + dt * 30, x = roundTo30 x }
@@ -69,24 +65,34 @@ instance Updatable StatusGame where
 
 
 instance Updatable GameState where
-    updateObject _ secs gstate  | levelCompleted (grid (maze gstate)) && status gstate == Running = gstate {status = Complete}
+    updateObject _ secs gstate  | levelCompleted g && status gstate == Running = gstate {status = Complete}
                                 | status gstate == Running = gstate {
-                                                                        maze = updateObject (maze gstate) secs gstate, --update the maze 
+                                                                        maze = updateObject (m {pacman = pm {mouthStatus = updateMouthStatus $ elapsedTime gstate }}) secs gstate, --update the maze 
                                                                         elapsedTime = elapsedTime gstate + secs, --update the elapsed time
                                                                         status = updateObject (status gstate) secs gstate, --update the game status
                                                                         pressedKey = None --reset the pressed key
                                                                     }
+                                                                                      
                                 | otherwise = gstate { --game is paused or ended, don't update the maze
                                                             elapsedTime = elapsedTime gstate + secs, --update the elapsed time
                                                             status = updateObject (status gstate) secs gstate, --update the game status
                                                             pressedKey = None --reset the pressed key
                                                         }
+                                where 
+                                    m = maze gstate
+                                    pm = pacman m
+                                    g = grid m
+
+                                    updateMouthStatus :: Float -> MouthStatus
+                                    updateMouthStatus time | round (4 * time) `mod` 2 == 1 = Open
+                                                           | otherwise = Closed
+                                    
 
 levelCompleted :: Grid -> Bool --check if level is completed by checking if there are no circles
 levelCompleted = foldr f True
                     where
                         f :: Tile -> Bool -> Bool
-                        f Circle{} _ = True
+                        f Circle{} _ = False
                         f _ b = b
 
 
