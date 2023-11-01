@@ -8,17 +8,11 @@ class Updatable a where
     updateObject :: a -> Float -> GameState -> a
 
 instance Updatable PacMan where
-    updateObject pacman@(MkPacMan {position = pos, direction = dir}) deltaTime gstate = pacman {position = updatePosition deltaTime pos validatedDir, direction = validatedDir}
+    updateObject pacman@(MkPacMan {position = pos, direction = dir}) deltaTime gstate = pacman {position = updatePosition 30 deltaTime pos validatedDir, direction = validatedDir}
                                                                         where
-                                                                            updatePosition :: Float -> Position -> Direction -> Position --update the position based on the direction and deltatime
-                                                                            updatePosition dt position@MkPosition{x = x, y = y} Up = position {y = y - dt * 30, x = roundTo30 x } --Deze 4 alleen als het blok erna geen wall is, anders: zet stil op afgeronde positie
-                                                                            updatePosition dt position@MkPosition{x = x, y = y} Down = position {y = y + dt * 30, x = roundTo30 x }
-                                                                            updatePosition dt position@MkPosition{x = x, y = y} Grid.Right = position {x = x + dt * 30, y = roundTo30 y  }
-                                                                            updatePosition dt position@MkPosition{x = x, y = y} Grid.Left = position {x = x - dt * 30, y = roundTo30 y }
+                                                                            expectedPosition = updatePosition 30 deltaTime pos updatedDir
 
-                                                                            updatedPosition = updatePosition deltaTime pos updatedDir
-
-                                                                            coord = positionToCoord updatedPosition
+                                                                            coord = positionToCoord expectedPosition
 
                                                                             validateDir :: Direction -> Direction --reset direction if now facing towards wall
                                                                             validateDir Up | show (topBlock g coord) == "Wall" = direction pacman
@@ -144,12 +138,13 @@ instance Updatable Maze where
                                                                         | otherwise = pos
 
 instance Updatable Enemy where
-    updateObject e dt gstate = e {enemyposition = updatePosition dt (enemyposition e) aimDirection, enemydirection = aimDirection }
+    updateObject e dt gstate = e {enemyposition = updatePosition 20 dt (enemyposition e) aimDirection, enemydirection = aimDirection }
                                 where
                                     m = maze gstate
                                     g = grid m
                                     pm = pacman m
-                                    pmCoordinate = positionToCoord $ position pm
+                                    pmPosition = position pm
+                                    pmCoordinate = positionToCoord pmPosition
                                     oldDirection = enemydirection e
                                     ePosition = enemyposition e
                                     eCoord | oldDirection == Up = positionToCoord $ ePosition {y = y ePosition + 15}
@@ -159,18 +154,12 @@ instance Updatable Enemy where
                                     eXCoord = xCoord eCoord
                                     eYCoord = yCoord eCoord
 
-                                    updatePosition :: Float -> Position -> Direction -> Position --update the position based on the direction and deltatime
-                                    updatePosition dt position@MkPosition{x = x, y = y} Up = position {y = y - dt * 30, x = roundTo30 x } --Deze 4 alleen als het blok erna geen wall is, anders: zet stil op afgeronde positie
-                                    updatePosition dt position@MkPosition{x = x, y = y} Down = position {y = y + dt * 30, x = roundTo30 x }
-                                    updatePosition dt position@MkPosition{x = x, y = y} Grid.Right = position {x = x + dt * 30, y = roundTo30 y  }
-                                    updatePosition dt position@MkPosition{x = x, y = y} Grid.Left = position {x = x - dt * 30, y = roundTo30 y }
-
                                     aimDirection :: Direction
-                                    aimDirection = bfs (filter (\c -> isEmpty (snd c) g) [(Grid.Left, eCoord {xCoord = eXCoord - 1}), (Grid.Right, eCoord {xCoord = eXCoord + 1}), (Up, eCoord{yCoord = eYCoord - 1}), (Down, eCoord {yCoord = eYCoord + 1})]) [] (aimPosition e m) g -- bfs naar richting met kortste route naar aimposition enemy
+                                    aimDirection = findShortestRoute (filter (\c -> isEmpty (snd c) g) [(Grid.Left, eCoord {xCoord = eXCoord - 1}), (Grid.Right, eCoord {xCoord = eXCoord + 1}), (Up, eCoord{yCoord = eYCoord - 1}), (Down, eCoord {yCoord = eYCoord + 1})]) (aimPosition e m) g -- bfs naar richting met kortste route naar aimposition enemy
 
-                                    xDistance = abs $ xCoord pmCoordinate - eXCoord
-                                    yDistance = abs $ yCoord pmCoordinate - eYCoord
-                                    distanceToPacman = sqrt $ (fromIntegral xDistance ^ 2) + (fromIntegral yDistance ^ 2)
+                                    xDistance = abs $ fromIntegral (xCoord pmCoordinate) - fromIntegral eXCoord
+                                    yDistance = abs $ fromIntegral (yCoord pmCoordinate) - fromIntegral eYCoord
+                                    distanceToPacman = sqrt $ xDistance ^ 2 + yDistance ^ 2
 
                                     aimPosition :: Enemy -> Maze -> Coordinate
                                     aimPosition MkEnemy {enemycolor = Red} m = pmCoordinate--red: targets pacman
@@ -178,7 +167,13 @@ instance Updatable Enemy where
                                                                                 | otherwise = pmCoordinate --except when it is closer then that, then it follows pacman
                                     aimPosition MkEnemy {enemycolor = Orange} m | distanceToPacman > 8 = pmCoordinate --if further then 8 blocks from pacman: move to pacman
                                                                                 | otherwise = nblocksInFrontCoordinate 32 Down $ nblocksInFrontCoordinate 28 Grid.Left eCoord --otherwise: its scared for pacman and moves to bottom left
-                                    aimPosition MkEnemy {enemycolor = Blue} m = pmCoordinate--blue: trek een lijn van rood naar 2 plekken voor pacman, trek deze 2 keer de afstand van rood naar pacman door
+                                    aimPosition MkEnemy {enemycolor = Blue} m = findNearestEmpty g destinationCoord--blue: trek een lijn van rood naar 2 plekken voor pacman, trek deze 2 keer de afstand van rood naar pacman door
+                                                                                where
+                                                                                    redPosition = enemyposition $ redEnemy m --NOG VALIDATEN OF HET RESULTAAT GEEN WALL IS, ALS DAT ZO IS: ZOEK DICHTSBIJZIJNDE LEGE
+                                                                                    xDistancePacmanToRed = abs $ x pmPosition - x redPosition
+                                                                                    yDistancePacmanToRed = abs $ y pmPosition - y redPosition
+                                                                                    destinationVector = MkVector2 (x pmPosition) (y pmPosition) + MkVector2 (2 * xDistancePacmanToRed) (2 * yDistancePacmanToRed)
+                                                                                    destinationCoord = positionToCoord $ MkPosition (vecX destinationVector) (vecY destinationVector)
 
                                     nblocksInFrontCoordinate :: Int -> Direction -> Coordinate -> Coordinate
                                     nblocksInFrontCoordinate n d coordinate | show (g!!coordToGridIndex newCoordinate) == "Wall" = nblocksInFrontCoordinate (n - 1) d coordinate
@@ -188,25 +183,46 @@ instance Updatable Enemy where
                                                                                     xNewCoordinate = xCoord newCoordinate
                                                                                     yNewCoordinate = yCoord newCoordinate
 
+                                    findNearestEmpty :: Grid -> Coordinate -> Coordinate
+                                    findNearestEmpty g c = findNearestEmpty' [validateCoordinate c] []
+                                                                    where
+                                                                        findNearestEmpty' ::  [Coordinate] -> [Coordinate] -> Coordinate
+                                                                        findNearestEmpty' queue'@(x:xs) alreadyChecked | show (g!!coordToGridIndex x) /= "Wall" = x
+                                                                                                                       | otherwise = findNearestEmpty' (xs ++ n) (x:alreadyChecked)
+                                                                                                                        where
+                                                                                                                            n = filter (\neighbour -> validateCoordinate neighbour == neighbour && neighbour `notElem` alreadyChecked) $ neighbours x
+
                                     translateCoordinate :: Int -> Direction -> Coordinate -> Coordinate
                                     translateCoordinate n Up (MkCoordinate x y) = MkCoordinate x (y + n)
                                     translateCoordinate n Down (MkCoordinate x y) = MkCoordinate x (y - n)
                                     translateCoordinate n Grid.Left (MkCoordinate x y) = MkCoordinate (x - n) y
                                     translateCoordinate n Grid.Right (MkCoordinate x y) = MkCoordinate (x + n) y
 
-bfs :: [(Direction, Coordinate)] -> [Coordinate] -> Coordinate -> Grid -> Direction
-bfs queue@(x:xs) alreadyChecked target grid | target == coord = dir
-                                            | otherwise = bfs (xs ++ zip (replicate (length neighbours) dir) neighbours) (coord:alreadyChecked) target grid
+findShortestRoute :: [(Direction, Coordinate)] -> Coordinate -> Grid -> Direction
+findShortestRoute queue target grid = findShortestRoute' queue []
                                 where
-                                    dir = fst x
-                                    coord = snd x
-                                    neighbours = filter (`notElem` alreadyChecked) $ emptyNeighbours (snd x) grid
+                                    findShortestRoute' ::  [(Direction, Coordinate)] -> [Coordinate] -> Direction
+                                    findShortestRoute' queue'@(x:xs) alreadyChecked | target == coord = dir
+                                                                                               | otherwise = findShortestRoute' (xs ++ zip (replicate (length n) dir) n) (coord:alreadyChecked)
+                                                                                                    where
+                                                                                                        dir = fst x
+                                                                                                        coord = snd x
+                                                                                                        n = filter (`notElem` alreadyChecked) $ emptyNeighbours (snd x) grid
 
 emptyNeighbours :: Coordinate -> Grid -> [Coordinate]
-emptyNeighbours MkCoordinate {xCoord = x, yCoord = y} grid = filter f [MkCoordinate x (y + 1), MkCoordinate x (y -1), MkCoordinate (x + 1) y, MkCoordinate (x - 1) y]
-                                                            where
-                                                                f :: Coordinate -> Bool
-                                                                f c = isEmpty c grid
+emptyNeighbours c grid = filter f $ neighbours c
+                        where
+                            f :: Coordinate -> Bool
+                            f c = isEmpty c grid
+
+neighbours :: Coordinate -> [Coordinate]
+neighbours (MkCoordinate x y) = [MkCoordinate x (y + 1), MkCoordinate x (y -1), MkCoordinate (x + 1) y, MkCoordinate (x - 1) y]
+
 isEmpty :: Coordinate -> Grid -> Bool
 isEmpty c grid = show (grid!!coordToGridIndex c) /= "Wall"
 
+updatePosition :: Float -> Float -> Position -> Direction -> Position --update the position based on the direction and deltatime
+updatePosition speed dt position@MkPosition{x = x, y = y} Up = position {y = y - dt * speed, x = roundTo30 x } --Deze 4 alleen als het blok erna geen wall is, anders: zet stil op afgeronde positie
+updatePosition speed dt position@MkPosition{x = x, y = y} Down = position {y = y + dt * speed, x = roundTo30 x }
+updatePosition speed dt position@MkPosition{x = x, y = y} Grid.Right = position {x = x + dt * speed, y = roundTo30 y  }
+updatePosition speed dt position@MkPosition{x = x, y = y} Grid.Left = position {x = x - dt * speed, y = roundTo30 y }

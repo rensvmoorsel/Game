@@ -20,10 +20,12 @@ step secs gstate | status gstate == Complete && (lastLevel gstate + 1) `notElem`
                                                         appendFile "src\\levels\\UnlockedLevels.txt" $ ' ':show unlockedLevel
                                                         return $ (updateObject gstate secs gstate) {unlockedLevels = sort $ unlockedLevel : unlockedLevels gstate}
                   | (status gstate == Failed || status gstate == Complete) --if game isn't running and a number is pressed and the level is unlocked: load the level
-                        && (pressedKey gstate == L1 || pressedKey gstate == L2 || pressedKey gstate == L3 || pressedKey gstate == L4 || pressedKey gstate == L5 || pressedKey gstate == L6 || pressedKey gstate == L7 || pressedKey gstate == L8 || pressedKey gstate == L9)
-                        && keyToInt (pressedKey gstate) `elem` unlockedLevels gstate =
-                            loadLevel gstate $ keyToInt (pressedKey gstate)
-                 | otherwise = return $ updateObject gstate secs gstate
+                        && key /= None
+                        && key /= Esc
+                        && keyToInt key `elem` unlockedLevels gstate =
+                            loadLevel gstate $ keyToInt key
+                  | otherwise = return $ updateObject gstate secs gstate
+                    where key = pressedKey gstate
 
 keyToInt :: Model.Key -> Int --convert a level key to the int of the level
 keyToInt L1 = 1
@@ -35,6 +37,7 @@ keyToInt L6 = 6
 keyToInt L7 = 7
 keyToInt L8 = 8
 keyToInt L9 = 9
+keyToInt _ = -1
 
 -- | Handle user input
 input :: Event -> GameState -> IO GameState --set the input

@@ -1,3 +1,4 @@
+{-# LANGUAGE InstanceSigs #-}
 module Grid where
 
 import Graphics.Gloss
@@ -12,7 +13,23 @@ data Position = MkPosition {
 }
 type Grid = [Tile]
 
-data Vector2 = MkVector2 Float Float
+data Vector2 = MkVector2 {vecX :: Float, vecY :: Float}
+
+instance Num Vector2 where
+  (*) :: Vector2 -> Vector2 -> Vector2
+  (MkVector2 x y) * (MkVector2 x2 y2) = MkVector2 (x * x2) (y * y2)
+  (MkVector2 x y) - (MkVector2 x2 y2) = MkVector2 (x - x2) (y - y2)
+  (MkVector2 x y) + (MkVector2 x2 y2) = MkVector2 (x + x2) (y + y2)
+  abs (MkVector2 x y)  = MkVector2 (abs x)  (abs y)
+  signum (MkVector2 x y) = MkVector2 (signum x) (signum y)
+  fromInteger a = MkVector2 (fromInteger a) (fromInteger a)
+  negate (MkVector2 x y) = MkVector2 (-x) (-y)
+
+instance Fractional Vector2 where
+  (MkVector2 x y) / (MkVector2 x2 y2) = MkVector2 (x / x2) (y / y2)
+  fromRational = undefined
+  recip = undefined
+
 
 --instances for these datatypes
 instance Eq Tile where
