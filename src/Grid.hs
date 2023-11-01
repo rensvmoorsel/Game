@@ -78,3 +78,10 @@ nextBlock grid Grid.Down = bottomBlock grid
 
 roundTo30 :: Float -> Float --round to block if direction switched
 roundTo30 value = fromInteger (round (value / 30) * 30)
+
+validateCoordinate :: Coordinate -> Coordinate
+validateCoordinate c@(MkCoordinate x y) | x < 1 = validateCoordinate c{xCoord = 1}
+                                        | y < 1 = validateCoordinate c{yCoord = 1}
+                                        | x > 28 = validateCoordinate c{xCoord = 28}
+                                        | y > 31 = validateCoordinate c{yCoord = 31}
+                                        | otherwise = c

@@ -73,7 +73,18 @@ instance Updatable StatusGame where
                                                             f _ b = b
 
                                     levelFailed :: Bool
-                                    levelFailed =  False--check if collision with enemy
+                                    levelFailed = foldr f False [redEnemy m, blueEnemy m, pinkEnemy m, orangeEnemy m]
+                                                    where
+                                                        f e b = b || enemyCollides (pacman m) e
+                                    enemyCollides :: PacMan -> Enemy -> Bool
+                                    enemyCollides pm e = distanceToPacman < 30
+                                                            where
+                                                                xDistance = abs $ x (position pm) - x (enemyposition e)
+                                                                yDistance = abs $ y (position pm) - y (enemyposition e)
+                                                                distanceToPacman = sqrt $  xDistance ^ 2 + yDistance ^ 2
+
+
+
     updateObject s _ _ = s
 
 
@@ -133,7 +144,7 @@ instance Updatable Maze where
                                                                         | otherwise = pos
 
 instance Updatable Enemy where
-    updateObject e dt gstate = e {enemyposition = updatePosition dt (enemyposition e) direction, enemydirection = direction }
+    updateObject e dt gstate = e {enemyposition = updatePosition dt (enemyposition e) aimDirection, enemydirection = aimDirection }
                                 where
                                     m = maze gstate
                                     g = grid m
@@ -147,7 +158,6 @@ instance Updatable Enemy where
                                            | oldDirection == Grid.Left = positionToCoord $ ePosition {x = x ePosition + 15}
                                     eXCoord = xCoord eCoord
                                     eYCoord = yCoord eCoord
-                                    direction = aimDirection
 
                                     updatePosition :: Float -> Position -> Direction -> Position --update the position based on the direction and deltatime
                                     updatePosition dt position@MkPosition{x = x, y = y} Up = position {y = y - dt * 30, x = roundTo30 x } --Deze 4 alleen als het blok erna geen wall is, anders: zet stil op afgeronde positie
@@ -163,20 +173,18 @@ instance Updatable Enemy where
                                     distanceToPacman = sqrt $ (fromIntegral xDistance ^ 2) + (fromIntegral yDistance ^ 2)
 
                                     aimPosition :: Enemy -> Maze -> Coordinate
-                                    aimPosition MkEnemy {enemycolor = Red} m = pmCoordinate--red: kortste route pacman
-                                    aimPosition MkEnemy {enemycolor = Pink} m = pmCoordinate --nblocksInFrontCoordinate 4 (direction pm) pmCoordinate--pink: kortste route 4 plekken voor pacman (als die er is, anders minder)
-                                    aimPosition MkEnemy {enemycolor = Orange} m = pmCoordinate -- | distanceToPacman > 8 = pmCoordinate --if not close enough: move to pacman
-                                                                                -- | otherwise = nblocksInFrontCoordinate 32 Down $ nblocksInFrontCoordinate 28 Grid.Left eCoord --otherwise move to left bottom
+                                    aimPosition MkEnemy {enemycolor = Red} m = pmCoordinate--red: targets pacman
+                                    aimPosition MkEnemy {enemycolor = Pink} m | distanceToPacman > 4 = nblocksInFrontCoordinate 4 (direction pm) pmCoordinate--pink: targets the block 4 blocks in front of pacman, 
+                                                                                | otherwise = pmCoordinate --except when it is closer then that, then it follows pacman
+                                    aimPosition MkEnemy {enemycolor = Orange} m | distanceToPacman > 8 = pmCoordinate --if further then 8 blocks from pacman: move to pacman
+                                                                                | otherwise = nblocksInFrontCoordinate 32 Down $ nblocksInFrontCoordinate 28 Grid.Left eCoord --otherwise: its scared for pacman and moves to bottom left
                                     aimPosition MkEnemy {enemycolor = Blue} m = pmCoordinate--blue: trek een lijn van rood naar 2 plekken voor pacman, trek deze 2 keer de afstand van rood naar pacman door
 
                                     nblocksInFrontCoordinate :: Int -> Direction -> Coordinate -> Coordinate
-                                    nblocksInFrontCoordinate n d coordinate | show (g!!coordToGridIndex coordinate) == "Wall"
-                                                                                || xNewCoordinate < 1 || xNewCoordinate > 28
-                                                                                || yNewCoordinate < 1 || yNewCoordinate > 32
-                                                                                     = nblocksInFrontCoordinate (n - 1) d coordinate
+                                    nblocksInFrontCoordinate n d coordinate | show (g!!coordToGridIndex newCoordinate) == "Wall" = nblocksInFrontCoordinate (n - 1) d coordinate
                                                                             | otherwise = newCoordinate
                                                                                 where
-                                                                                    newCoordinate = translateCoordinate n d coordinate
+                                                                                    newCoordinate = validateCoordinate $ translateCoordinate n d coordinate
                                                                                     xNewCoordinate = xCoord newCoordinate
                                                                                     yNewCoordinate = yCoord newCoordinate
 
