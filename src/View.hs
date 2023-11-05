@@ -7,6 +7,7 @@ import Model
 import Data.Maybe (mapMaybe)
 import Drawing
 import LevelLoading
+import GameStateModule
 
 view :: GameState -> IO Picture --draw the impure parts
 view gstate = return $ viewPure gstate

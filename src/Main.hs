@@ -13,7 +13,7 @@ import Data.Maybe
 import Data.List
 
 main :: IO ()
-main = do
+main = do --load all IO and inject it into the gamestate, then start the game
             pacmanClosed <- loadBMP "src\\images\\PacmanClosed.bmp"
             pacmanLeft <- loadBMP "src\\images\\PacmanOpenLeft.bmp"
             pacmanRight <- loadBMP "src\\images\\PacmanOpenRight.bmp"
@@ -55,15 +55,15 @@ main = do
                 input            -- Event function
                 step             -- Step function
 
-loadUnlockedLevels :: IO [Int]
+loadUnlockedLevels :: IO [Int] --read the unlockedLevels file
 loadUnlockedLevels = do
                     content <- readFile "src\\levels\\UnlockedLevels.txt"
                     return $ map read $ words content
 
-loadLevels :: IO [Int]
+loadLevels :: IO [Int] --read the level files
 loadLevels = filterM (\levelNumber -> doesFileExist $ "src\\levels\\" ++ show levelNumber ++ ".txt") [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-loadMazes :: Int -> GameState -> IO [Maze]
+loadMazes :: Int -> GameState -> IO [Maze] --add the mazes into the levels of the gamestate
 loadMazes level gstate = do
                             levelExists <- doesFileExist ("src\\levels\\" ++ show level ++ ".txt")
                             if levelExists
@@ -75,7 +75,7 @@ loadMazes level gstate = do
                             else 
                                 return []
 
-stringToMaze :: String -> GameState -> Maze
+stringToMaze :: String -> GameState -> Maze --convert maze string into a maze
 stringToMaze levelContent gstate =
                                 let 
                                     levelLines = lines levelContent --split the lines

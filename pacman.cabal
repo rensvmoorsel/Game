@@ -21,4 +21,10 @@ executable pacman
                      , Update
                      , Grid
                      , LevelLoading
+                     , Pacman
+                     , MazeModule
+                     , GameStateModule
+                     , TileModule
+                     , UpdateStatusGame
+                     , EnemyModule
   default-language:    Haskell2010

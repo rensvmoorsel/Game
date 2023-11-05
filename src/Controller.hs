@@ -12,6 +12,7 @@ import Data.Char (isDigit, ord)
 import System.Directory
 import LevelLoading
 import Data.List
+import GameStateModule
 
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState
@@ -24,7 +25,7 @@ step secs gstate | status gstate == Complete && (lastLevel gstate + 1) `notElem`
                         && key /= Esc
                         && keyToInt key `elem` unlockedLevels gstate =
                             loadLevel gstate $ keyToInt key
-                  | otherwise = return $ updateObject gstate secs gstate
+                  | otherwise = return $ updateObject gstate secs gstate --otherwise: the game is running/paused, update the game state
                     where key = pressedKey gstate
 
 keyToInt :: Model.Key -> Int --convert a level key to the int of the level

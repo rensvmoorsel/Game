@@ -4,18 +4,18 @@ module Grid where
 import Graphics.Gloss
 
 --datatypes for the grid
-data Tile = Empty { coordinate :: Coordinate } | Wall {coordinate :: Coordinate} | Circle {coordinate :: Coordinate}
-data Coordinate = MkCoordinate { xCoord :: Int, yCoord :: Int }
-data Direction = Left | Right | Up | Down
-data Position = MkPosition {
+data Tile = Empty { coordinate :: Coordinate } | Wall {coordinate :: Coordinate} | Circle {coordinate :: Coordinate} --A tile in the grid
+data Coordinate = MkCoordinate { xCoord :: Int, yCoord :: Int } --A coordinate in the grid
+data Direction = Left | Right | Up | Down --direction that pacman and enemies can move in
+data Position = MkPosition { --position on screen
   x :: Float
   , y :: Float
 }
-type Grid = [Tile]
+type Grid = [Tile] --the tiles
 
-data Vector2 = MkVector2 {vecX :: Float, vecY :: Float}
+data Vector2 = MkVector2 {vecX :: Float, vecY :: Float} --A vector
 
-instance Num Vector2 where
+instance Num Vector2 where --instance of the Num class for a vector
   (*) :: Vector2 -> Vector2 -> Vector2
   (MkVector2 x y) * (MkVector2 x2 y2) = MkVector2 (x * x2) (y * y2)
   (MkVector2 x y) - (MkVector2 x2 y2) = MkVector2 (x - x2) (y - y2)
@@ -25,7 +25,7 @@ instance Num Vector2 where
   fromInteger a = MkVector2 (fromInteger a) (fromInteger a)
   negate (MkVector2 x y) = MkVector2 (-x) (-y)
 
-instance Fractional Vector2 where
+instance Fractional Vector2 where --Instance for a fractional for vector
   (MkVector2 x y) / (MkVector2 x2 y2) = MkVector2 (x / x2) (y / y2)
   fromRational = undefined
   recip = undefined
@@ -96,9 +96,21 @@ nextBlock grid Grid.Down = bottomBlock grid
 roundTo30 :: Float -> Float --round to block if direction switched
 roundTo30 value = fromInteger (round (value / 30) * 30)
 
-validateCoordinate :: Coordinate -> Coordinate
+validateCoordinate :: Coordinate -> Coordinate --validates if a coordinate is in the grid
 validateCoordinate c@(MkCoordinate x y) | x < 1 = validateCoordinate c{xCoord = 1}
                                         | y < 1 = validateCoordinate c{yCoord = 1}
                                         | x > 28 = validateCoordinate c{xCoord = 28}
                                         | y > 31 = validateCoordinate c{yCoord = 31}
                                         | otherwise = c
+
+translateCoordinate :: Int -> Direction -> Coordinate -> Coordinate --translates a coordinate
+translateCoordinate n Up (MkCoordinate x y) = MkCoordinate x (y + n)
+translateCoordinate n Down (MkCoordinate x y) = MkCoordinate x (y - n)
+translateCoordinate n Grid.Left (MkCoordinate x y) = MkCoordinate (x - n) y
+translateCoordinate n Grid.Right (MkCoordinate x y) = MkCoordinate (x + n) y
+
+nblocksInFrontCoordinate :: Grid -> Int -> Direction -> Coordinate -> Coordinate --returns the coordinate n blocks in a direction of a tile
+nblocksInFrontCoordinate g n d coordinate | show (g!!coordToGridIndex newCoordinate) == "Wall" = nblocksInFrontCoordinate g (n - 1) d coordinate --if the new block is a wall, go one block back
+                                          | otherwise = newCoordinate -- the coordinate is empty: return it
+                                            where
+                                                newCoordinate = validateCoordinate $ translateCoordinate n d coordinate --the coordinate of the new tile
