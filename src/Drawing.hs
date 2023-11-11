@@ -9,4 +9,4 @@ class Drawable a where --for drawable objects
     draw :: a -> Picture  
 
 moveSprite :: (Float, Float) -> Picture -> Picture --move a sprite a certain amount of pixels
-moveSprite (x, y) = Translate (x - 405) (-y + 450)
+moveSprite (x, y) = Translate (x - 407) (-y + 450)

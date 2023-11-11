@@ -16,8 +16,6 @@ data Maze = MkMaze {
   orangeEnemy :: Enemy,
   redEnemy :: Enemy
  }
-type Width = Float
-type Height = Float
 data PacMan = MkPacMan {
                         position :: Position
                         , direction :: Direction
@@ -39,7 +37,6 @@ data Enemy = MkEnemy {
                         , enemyspriteDown :: Picture
                       }
 data EnemyColor = Red | Orange | Pink | Blue
-data Line = MkLine Position Position
 data StatusGame = Running | Paused | Complete | Failed
 data Key = W | A | S | D | Esc | None | L1 | L2 | L3 | L4 | L5 | L6 | L7 | L8 | L9
 

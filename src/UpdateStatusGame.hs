@@ -28,7 +28,7 @@ levelFailed m = foldr f False [redEnemy m, blueEnemy m, pinkEnemy m, orangeEnemy
                     f e b = b || enemyCollides (pacman m) e
 
 enemyCollides :: PacMan -> Enemy -> Bool --check if pacman is too close to an enemy
-enemyCollides pm e = distanceToPacman < 30
+enemyCollides pm e = distanceToPacman < 24.5
         where
             xDistance = abs $ x (position pm) - x (enemyposition e)
             yDistance = abs $ y (position pm) - y (enemyposition e)

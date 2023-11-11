@@ -12,30 +12,32 @@ instance Drawable Enemy where --draw the correct image based on the direction of
     draw e@(MkEnemy  {enemyposition = MkPosition {x = x, y = y}, enemydirection = Down, enemyspriteDown = image}) = moveSprite (x, y) image
 
 instance Updatable Enemy where
-    updateObject e dt gstate = e {enemyposition = updatePosition 20 dt (enemyposition e) aimDirection, enemydirection = aimDirection }
+    updateObject e dt gstate = e {enemyposition = updatePosition 20 dt (enemyposition e) aimDirection, enemydirection = aimDirection } --update the enemy
                                 where
-                                    m = maze gstate
-                                    g = grid m
-                                    pm = pacman m
-                                    pmPosition = position pm
-                                    pmCoordinate = positionToCoord pmPosition
-                                    oldDirection = enemydirection e
-                                    ePosition = enemyposition e
-                                    eCoord | oldDirection == Up = positionToCoord $ ePosition {y = y ePosition + 15}
+                                    m = maze gstate --the maze
+                                    g = grid m --the grid
+                                    pm = pacman m --pacman
+                                    pmPosition = position pm --position of pacman
+                                    pmCoordinate = positionToCoord pmPosition --coordinat in the grid of pacman
+                                    oldDirection = enemydirection e --the original direction of the enemy
+                                    ePosition = enemyposition e --the original position of the enemy
+                                    eCoord | oldDirection == Up = positionToCoord $ ePosition {y = y ePosition + 15} --calculate corrected coordinate of the enemy
                                            | oldDirection == Down = positionToCoord $ ePosition {y = y ePosition - 15}
                                            | oldDirection == Grid.Right = positionToCoord $ ePosition {x = x ePosition - 15}
                                            | oldDirection == Grid.Left = positionToCoord $ ePosition {x = x ePosition + 15}
-                                    eXCoord = xCoord eCoord
+                                    
+                                    eXCoord = xCoord eCoord -- the x and y values of the coordinate
                                     eYCoord = yCoord eCoord
 
-                                    aimDirection :: Direction
+                                    --the new direction of the enemy
                                     aimDirection = findShortestRoute (filter (\c -> isEmpty (snd c) g) [(Grid.Left, eCoord {xCoord = eXCoord - 1}), (Grid.Right, eCoord {xCoord = eXCoord + 1}), (Up, eCoord{yCoord = eYCoord - 1}), (Down, eCoord {yCoord = eYCoord + 1})]) (aimPosition e m) g -- bfs naar richting met kortste route naar aimposition enemy
 
+                                    --calculate the distance to pacman
                                     xDistance = abs $ fromIntegral (xCoord pmCoordinate) - fromIntegral eXCoord
                                     yDistance = abs $ fromIntegral (yCoord pmCoordinate) - fromIntegral eYCoord
                                     distanceToPacman = sqrt $ xDistance ^ 2 + yDistance ^ 2
 
-                                    aimPosition :: Enemy -> Maze -> Coordinate
+                                    --calculate the position the enemy must aim for
                                     aimPosition MkEnemy {enemycolor = Red} m = pmCoordinate--red: targets pacman
                                     aimPosition MkEnemy {enemycolor = Pink} m | distanceToPacman > 4 = nblocksInFrontCoordinate g 4 (direction pm) pmCoordinate--pink: targets the block 4 blocks in front of pacman, 
                                                                                 | otherwise = pmCoordinate --except when it is closer then that, then it follows pacman

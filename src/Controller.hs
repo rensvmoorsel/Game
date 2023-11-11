@@ -16,17 +16,28 @@ import GameStateModule
 
 -- | Handle one iteration of the game
 step :: Float -> GameState -> IO GameState
-step secs gstate | status gstate == Complete && (lastLevel gstate + 1) `notElem` unlockedLevels gstate && elem (lastLevel gstate + 1) (levels gstate) = do --add level to the completed levels file if not already done
-                                                        let unlockedLevel = lastLevel gstate + 1
-                                                        appendFile "src\\levels\\UnlockedLevels.txt" $ ' ':show unlockedLevel
-                                                        return $ (updateObject gstate secs gstate) {unlockedLevels = sort $ unlockedLevel : unlockedLevels gstate}
-                  | (status gstate == Failed || status gstate == Complete) --if game isn't running and a number is pressed and the level is unlocked: load the level
+step secs gstate | status gstate == Complete 
+                      && (lastLevel gstate + 1) `notElem` unlockedLevels gstate 
+                      && elem (lastLevel gstate + 1) (levels gstate) =
+                                          do
+                                            rL <- randomList 868
+                                            let unlockedLevel = lastLevel gstate + 1
+                                            appendFile "src\\levels\\UnlockedLevels.txt" $ ' ':show unlockedLevel
+                                            return (stepPure secs gstate rL) {unlockedLevels = sort $ unlockedLevel : unlockedLevels gstate}
+                 | otherwise = do
+                                  rL <- randomList 868
+                                  return $ stepPure secs gstate rL
+
+
+
+stepPure :: Float -> GameState -> [Int] -> GameState
+stepPure secs gstate rL | (status gstate == Failed || status gstate == Complete) --if game isn't running and a number is pressed and the level is unlocked: load the level
                         && key /= None
                         && key /= Esc
-                        && keyToInt key `elem` unlockedLevels gstate =
-                            loadLevel gstate $ keyToInt key
-                  | otherwise = return $ updateObject gstate secs gstate --otherwise: the game is running/paused, update the game state
-                    where key = pressedKey gstate
+                        && keyToInt key `elem` unlockedLevels gstate = 
+                              loadLevel gstate (keyToInt key) rL
+                        | otherwise = updateObject gstate secs gstate --otherwise: the game is running/paused, update the game state
+                            where key = pressedKey gstate
 
 keyToInt :: Model.Key -> Int --convert a level key to the int of the level
 keyToInt L1 = 1
@@ -60,3 +71,9 @@ inputKey (EventKey (Char '7') G.Down _ _) gstate = gstate { pressedKey = L7 }
 inputKey (EventKey (Char '8') G.Down _ _) gstate = gstate { pressedKey = L8 }
 inputKey (EventKey (Char '9') G.Down _ _) gstate = gstate { pressedKey = L9 }
 inputKey _ gstate = gstate { pressedKey = None }
+
+randomList :: Int -> IO [Int]
+randomList n = sequence $ replicate n $ randomRange (0, 10)
+
+randomRange :: (Int, Int) -> IO Int --generate random int
+randomRange (x, y) = getStdRandom $ randomR (x, y)
