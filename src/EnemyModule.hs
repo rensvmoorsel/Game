@@ -12,44 +12,31 @@ instance Drawable Enemy where --draw the correct image based on the direction of
     draw e@(MkEnemy  {enemyposition = MkPosition {x = x, y = y}, enemydirection = Down, enemyspriteDown = image}) = moveSprite (x, y) image
 
 instance Updatable Enemy where
-    updateObject e dt gstate = e {enemyposition = updatePosition 20 dt (enemyposition e) aimDirection, enemydirection = aimDirection } --update the enemy
+    updateObject e dt gstate@GameState {maze = m@(MkMaze {grid = g, pacman = pm})} = e {enemyposition = updatePosition 20 dt (enemyposition e) aimDirection, enemydirection = aimDirection } --update the enemy
                                 where
-                                    m = maze gstate --the maze
-                                    g = grid m --the grid
-                                    pm = pacman m --pacman
                                     pmPosition = position pm --position of pacman
                                     pmCoordinate = positionToCoord pmPosition --coordinat in the grid of pacman
                                     oldDirection = enemydirection e --the original direction of the enemy
                                     ePosition = enemyposition e --the original position of the enemy
-                                    eCoord | oldDirection == Up = positionToCoord $ ePosition {y = y ePosition + 15} --calculate corrected coordinate of the enemy
-                                           | oldDirection == Down = positionToCoord $ ePosition {y = y ePosition - 15}
-                                           | oldDirection == Grid.Right = positionToCoord $ ePosition {x = x ePosition - 15}
-                                           | oldDirection == Grid.Left = positionToCoord $ ePosition {x = x ePosition + 15}
                                     
+                                    eCoord = correctedEnemyCoord ePosition oldDirection
                                     eXCoord = xCoord eCoord -- the x and y values of the coordinate
                                     eYCoord = yCoord eCoord
 
                                     --the new direction of the enemy
-                                    aimDirection = findShortestRoute (filter (\c -> isEmpty (snd c) g) [(Grid.Left, eCoord {xCoord = eXCoord - 1}), (Grid.Right, eCoord {xCoord = eXCoord + 1}), (Up, eCoord{yCoord = eYCoord - 1}), (Down, eCoord {yCoord = eYCoord + 1})]) (aimPosition e m) g -- bfs naar richting met kortste route naar aimposition enemy
+                                    aimDirection = findShortestRoute (filter (\c -> isEmpty (snd c) g) [(Grid.Left, eCoord {xCoord = eXCoord - 1}), (Grid.Right, eCoord {xCoord = eXCoord + 1}), (Up, eCoord{yCoord = eYCoord - 1}), (Down, eCoord {yCoord = eYCoord + 1})]) (aimPosition e m pmCoordinate eCoord distanceToPacman) g -- bfs naar richting met kortste route naar aimposition enemy
 
                                     --calculate the distance to pacman
                                     xDistance = abs $ fromIntegral (xCoord pmCoordinate) - fromIntegral eXCoord
                                     yDistance = abs $ fromIntegral (yCoord pmCoordinate) - fromIntegral eYCoord
                                     distanceToPacman = sqrt $ xDistance ^ 2 + yDistance ^ 2
 
-                                    --calculate the position the enemy must aim for
-                                    aimPosition MkEnemy {enemycolor = Red} m = pmCoordinate--red: targets pacman
-                                    aimPosition MkEnemy {enemycolor = Pink} m | distanceToPacman > 4 = nblocksInFrontCoordinate g 4 (direction pm) pmCoordinate--pink: targets the block 4 blocks in front of pacman, 
-                                                                                | otherwise = pmCoordinate --except when it is closer then that, then it follows pacman
-                                    aimPosition MkEnemy {enemycolor = Orange} m | distanceToPacman > 8 = pmCoordinate --if further then 8 blocks from pacman: move to pacman
-                                                                                | otherwise = nblocksInFrontCoordinate g 32 Down $ nblocksInFrontCoordinate g 28 Grid.Left eCoord --otherwise: its scared for pacman and moves to bottom left
-                                    aimPosition MkEnemy {enemycolor = Blue} m = findNearestEmpty g destinationCoord--blue: trek een lijn van rood naar 2 plekken voor pacman, trek deze 2 keer de afstand van rood naar pacman door
-                                                                                where
-                                                                                    redPosition = enemyposition $ redEnemy m --NOG VALIDATEN OF HET RESULTAAT GEEN WALL IS, ALS DAT ZO IS: ZOEK DICHTSBIJZIJNDE LEGE
-                                                                                    xDistancePacmanToRed = abs $ x pmPosition - x redPosition
-                                                                                    yDistancePacmanToRed = abs $ y pmPosition - y redPosition
-                                                                                    destinationVector = MkVector2 (x pmPosition) (y pmPosition) + MkVector2 (2 * xDistancePacmanToRed) (2 * yDistancePacmanToRed)
-                                                                                    destinationCoord = positionToCoord $ MkPosition (vecX destinationVector) (vecY destinationVector)
+correctedEnemyCoord  :: Position -> Direction -> Coordinate --calculate corrected coordinate of the enemy
+correctedEnemyCoord ePosition direction | direction == Up = positionToCoord $ ePosition {y = y ePosition + 15} 
+                                        | direction == Down = positionToCoord $ ePosition {y = y ePosition - 15}
+                                        | direction == Grid.Right = positionToCoord $ ePosition {x = x ePosition - 15}
+                                        | direction == Grid.Left = positionToCoord $ ePosition {x = x ePosition + 15}
+                                    
 
 findNearestEmpty :: Grid -> Coordinate -> Coordinate -- find the nearest empty coordinate with bfs
 findNearestEmpty g c = findNearestEmpty' [validateCoordinate c] [] --set the alreadychecked to an empty list
@@ -82,3 +69,18 @@ neighbours (MkCoordinate x y) = [MkCoordinate x (y + 1), MkCoordinate x (y - 1),
 
 isEmpty :: Coordinate -> Grid -> Bool --checks if tile is not a wall
 isEmpty c grid = show (grid!!coordToGridIndex c) /= "Wall"
+
+aimPosition :: Enemy -> Maze -> Coordinate -> Coordinate -> Float -> Coordinate --calculate the position the enemy must aim for
+aimPosition MkEnemy {enemycolor = Red} _ pmCoordinate _ _ = pmCoordinate--red: targets pacman
+aimPosition MkEnemy {enemycolor = Pink} m@MkMaze{grid = g, pacman = pm} pmCoordinate _ distanceToPacman | distanceToPacman > 4 = nblocksInFrontCoordinate g 4 (direction pm) pmCoordinate--pink: targets the block 4 blocks in front of pacman, 
+                                            | otherwise = pmCoordinate --except when it is closer then that, then it follows pacman
+aimPosition MkEnemy {enemycolor = Orange} m@MkMaze{grid = g} pmCoordinate eCoord distanceToPacman | distanceToPacman > 8 = pmCoordinate --if further then 8 blocks from pacman: move to pacman
+                                            | otherwise = nblocksInFrontCoordinate g 32 Down $ nblocksInFrontCoordinate g 28 Grid.Left eCoord --otherwise: its scared for pacman and moves to bottom left
+aimPosition MkEnemy {enemycolor = Blue} m@MkMaze{grid = g, pacman = pm} _ _ _ = findNearestEmpty g destinationCoord--blue: trek een lijn van rood naar 2 plekken voor pacman, trek deze 2 keer de afstand van rood naar pacman door
+                                            where
+                                                redPosition = enemyposition $ redEnemy m 
+                                                pmPosition = position pm
+                                                xDistancePacmanToRed = abs $ x pmPosition - x redPosition
+                                                yDistancePacmanToRed = abs $ y pmPosition - y redPosition
+                                                destinationVector = MkVector2 (x pmPosition) (y pmPosition) + MkVector2 (2 * xDistancePacmanToRed) (2 * yDistancePacmanToRed)
+                                                destinationCoord = positionToCoord $ MkPosition (vecX destinationVector) (vecY destinationVector)
